@@ -91,32 +91,33 @@ def schedule(map_info, rides):
     #print (maxstep)
 
     while step <= maxstep and any([ride[5] for ride in orides]):
-        print ("Step: " + str(step))
+        #print ("Step: " + str(step))
         #print ("Working v: " + str(len(workv)) + " with rides " + str([v[2][4] for v in workv]))
         for i in range(len(freev)):
             if step == freev[i][3]:
-                donejob[freev[i][0]].append(freev[i][2][4])
                 print("Ride " + str(freev[i][2][4]) + " finished!")
                 freev[i][1] = freev[i][2][1]
                 freev[i][2] = None
                 freev[i][3] = None
         for i in range(len(orides)):
             if orides[i][5]: # any([v[2] is not None for v in freev])
-                freev.sort(key = lambda veh: man_distance(veh[1], orides[i][0]))
-                for v in freev:
-                    if v[2] is not None:
-                        continue
-                    else:
-                        delay = orides[i][2] - (step + man_distance(v[1], orides[i][0]))
-                        if delay < 0:
-                            delay = 0
-                        endtime = step + man_distance(v[1], orides[i][0]) + delay + ride_distance(orides[i])
-                        if endtime <= orides[i][3]:
-                            v[2] = orides[i]
-                            v[3] = endtime
-                        orides[i][5] = False
-                        break
-        step = max([v[3] if v[3] is not None else 0 for v in freev])
+                freev.sort(key = lambda veh: man_distance(veh[1], orides[i][0]) if veh[2] is None else sys.maxsize)
+                #print(str(freev[0]))
+                if freev[0][2] is None:
+                    delay = orides[i][2] - (step + man_distance(freev[0][1], orides[i][0]))
+                    if delay < 0:
+                        delay = 0
+                    endtime = step + man_distance(freev[0][1], orides[i][0]) + delay + ride_distance(orides[i])
+                    if endtime <= orides[i][3]:
+                        freev[0][2] = orides[i]
+                        freev[0][3] = endtime
+                        #print(str("Ride " + str(orides[i][4]) + " assigned to car " + str(freev[0][0])))
+                        donejob[freev[0][0]].append(orides[i][4])
+                    orides[i][5] = False
+                else:
+                    #print("No free cars!")
+                    break
+        step += min([v[3]-step if v[3] is not None else 1 for v in freev])
 
     return [v for v in donejob]
 
