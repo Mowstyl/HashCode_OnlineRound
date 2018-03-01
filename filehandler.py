@@ -9,6 +9,7 @@ ride:
     start,
     finish
     id
+    usable
 map:
 	rows,
 	cols,
@@ -61,14 +62,11 @@ def loadRFile(filename):
 		if f < 0 or f > t:
 			raise ValueError("The latest finish must be between 0 and the number of steps")
 
-		ride = [(a,b),(x,y),s,f,i]
+		ride = [(a,b),(x,y),s,f,i,True]
 		rides.append(ride)
 
 	return (mapdata, rides)
 
-'''
-
-'''
 def saveRFile(filename, sol):
 	f = open(filename, "w+")
 	for v in sol:
