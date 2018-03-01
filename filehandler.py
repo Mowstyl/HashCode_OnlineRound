@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-Formats:
+Formats for loading:
 ride:
     (a,b),
     (c,d),
@@ -19,6 +19,10 @@ map:
 
 returns:
     (mapdata, [ride1, ..., rideN])
+
+Formats for saving:
+listvec:
+    ridesassigned (list)
 '''
 def loadRFile(filename):
 	inputfile = open(filename, "r")
@@ -62,8 +66,13 @@ def loadRFile(filename):
 
 	return (mapdata, rides)
 
-def saveRFile(filename, F, sol):
-    pass
+'''
 
-if __name__ == "__main__":
-    print(loadRFile("a_example.in"))
+'''
+def saveRFile(filename, sol):
+	f = open(filename, "w+")
+	for v in sol:
+		f.write(str(len(v))+' ')
+		for i in v:
+			f.write(str(i) + ' ')
+		f.write('\n')

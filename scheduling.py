@@ -18,10 +18,27 @@ def ride_distance(ride):
     (c,d),
     start,
     finish
+	id
 '''
 
-def sort_rides(rides):
-	return np.sort(rides,key = ride_distance)
+def sort_rides(rides, **kwargs): # kwargs['mode']: 0 -> ordenar por start, 1 -> ordenar por ride_distance
+
+	'''
+	# En caso de emergencias
+	if(kwargs):
+			l_ord = []
+			if(kwargs[0]=='0'):
+				for i in rides:
+					l_ord.append((i[5],i[2]))
+					l_ord.sort(key=lambda x: x[1])
+					return [i[0] for i in l_ord]
+			else:
+				for i in rides:
+					l_ord.append((i[5],ride_distance(i[2],i[3])))
+					l_ord.sort(key=lambda x: x[1])
+					return [i[0] for i in l_ord]
+	'''
+	return sorted(rides, key = ride_distance)
 
 def main(argv): # We expect to receive input file as first argument and output file second argument (optional). If output not specified, defaults to input+.out
 	if len(argv) < 1:
@@ -60,7 +77,23 @@ def main(argv): # We expect to receive input file as first argument and output f
 	#print ("Score: " + str(sol[2]) + "/" + str(c*r))
 	global exploredNodes
 	print ("Explored Nodes: " + str(exploredNodes))
-	fh.savePFile(output, sol)
+	fh.saveRFile(output, sol)
 
-def schedule():
+'''
+map:
+	rows,      0
+	cols,      1
+	vehics,    2
+	rides,     3
+	bonus,     4
+	steps      5
+'''
+def schedule(map_info, rides):
     step = 0
+    sort_rides(rides, mode=0)
+    vehicles = [[i, None] for i in range(map_info[2])] # Lista de vehiculos con su id y su objetivo
+    mapsim = np.zeros((map_info[0], map_info[1]))
+    mapsim[0,0] = map_info[2]
+    while true:
+        for veh in vehicles:
+            if veh[1] is None:
