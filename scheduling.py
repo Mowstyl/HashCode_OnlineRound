@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import math as m
-#import numpy as np
 import filehandler as fh
 import sys
 
@@ -23,30 +22,7 @@ def ride_distance(ride):
     usable
 '''
 
-def sort_rides(rides, **kwargs): # kwargs['mode']: 0 -> ordenar por start, 1 -> ordenar por ride_distance
-# 2 -> finish
-    '''
-    # En caso de emergencias
-    if(kwargs):
-            l_ord = []
-            if(kwargs['mode']=='0'):
-                for i in rides:
-                    l_ord.append((i[5],i[2]))
-                    l_ord.sort(key=lambda x: x[1])
-                    return [i[0] for i in l_ord]
-
-            elif (kwargs['mode']=='1'):
-                for i in rides:
-                    l_ord.append((i[5],ride_distance(i[0],i[1])))
-                    l_ord.sort(key=lambda x: x[1])
-                    return [i[0] for i in l_ord]
-            else:
-                for i in rides:
-                    l_ord.append((i[5],i[3])
-                    l_ord.sort(key=lambda x: x[1])
-                    return [i[0] for i in l_ord]
-
-    '''
+def sort_rides(rides, **kwargs): # kwargs['mode']: 0 -> ordenar por start, 1 -> ordenar por ride_distance 2 -> finish
     rev = False
     if(kwargs['mode']=='0'):
         k = lambda ride: ride[2]
@@ -70,7 +46,8 @@ def main(argv): # We expect to receive input file as first argument and output f
         print (str(e))
         print ("Program ended with errors!")
         return
-    sol = schedule(map_info, rides)
+    sol, score = schedule(map_info, rides)
+    print (score)
     fh.saveRFile(output, sol)
 
 '''
@@ -83,6 +60,7 @@ map:
     steps      5
 '''
 def schedule(map_info, rides):
+    score = 0
     step = 1
     orides = sort_rides(rides, mode=1)
     freev = [[i, (0, 0), None, None] for i in range(map_info[2])] # Lista de vehiculos con su id, posicion y su ride asignado, asi como el tiempo en el que volvera a ser libre (willy)
@@ -95,7 +73,7 @@ def schedule(map_info, rides):
         #print ("Working v: " + str(len(workv)) + " with rides " + str([v[2][4] for v in workv]))
         for i in range(len(freev)):
             if step == freev[i][3]:
-                print("Ride " + str(freev[i][2][4]) + " finished!")
+                #print("Ride " + str(freev[i][2][4]) + " finished!")
                 freev[i][1] = freev[i][2][1]
                 freev[i][2] = None
                 freev[i][3] = None
@@ -105,21 +83,24 @@ def schedule(map_info, rides):
                 #print(str(freev[0]))
                 if freev[0][2] is None:
                     delay = orides[i][2] - (step + man_distance(freev[0][1], orides[i][0]))
+                    bonus = map_info[4]
                     if delay < 0:
                         delay = 0
+                        bonus = 0
                     endtime = step + man_distance(freev[0][1], orides[i][0]) + delay + ride_distance(orides[i])
                     if endtime <= orides[i][3]:
                         freev[0][2] = orides[i]
                         freev[0][3] = endtime
                         #print(str("Ride " + str(orides[i][4]) + " assigned to car " + str(freev[0][0])))
                         donejob[freev[0][0]].append(orides[i][4])
+                        score += bonus + ride_distance(orides[i])
                     orides[i][5] = False
                 else:
                     #print("No free cars!")
                     break
         step += min([v[3]-step if v[3] is not None else 1 for v in freev])
 
-    return [v for v in donejob]
+    return ([v for v in donejob], score)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
