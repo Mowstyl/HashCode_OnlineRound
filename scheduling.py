@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import math as m
-import numpy as np
+#import numpy as np
 import filehandler as fh
 
 # Mannhatan distance between two points
@@ -92,8 +92,8 @@ def main(argv): # We expect to receive input file as first argument and output f
 	#print (str(sol[0]) + " slices")
 	#print (sol[1])
 	#print ("Score: " + str(sol[2]) + "/" + str(c*r))
-	global exploredNodes
-	print ("Explored Nodes: " + str(exploredNodes))
+	#global exploredNodes
+	#print ("Explored Nodes: " + str(exploredNodes))
 	fh.saveRFile(output, sol)
 
 '''
@@ -108,20 +108,43 @@ map:
 def schedule(map_info, rides):
     step = 0
     orides = sort_rides(rides, mode=2)
-    freev = [[i, (0, 0), None] for i in range(map_info[2])] # Lista de vehiculos con su id, posicion y su ride asignado
+    freev = [[i, (0, 0), None, None] for i in range(map_info[2])] # Lista de vehiculos con su id, posicion y su ride asignado, asi como el tiempo en el que volvera a ser libre (willy)
     workv = [] # Lista de vehiculos trabajando
     donejob = {} # Diccionario que indiza por id de vehiculo y que almacena listas de trabajos completados
     mapsim = np.zeros((map_info[0], map_info[1]))
     mapsim[0,0] = map_info[2]
     currentrides = []
 
-    while true:
+    while len(orides) > 0:
+        vtodel = [] #vehicles to delete
+        for i in range(len(workv)):
+            if step == workv[i][3]:
+                if (donejob[workv[i][0]] is None):
+                    donejob[workv[i][0]] = []
+                donejob[workv[i][0]].append(workv[i][2][4])
+                workv[i][2] = None
+                workv[i][3] = None
+                freev.append(workv[i])
+                vtodel.append(i)
+        for i in vtodel:
+            del workv[i]
         ridestodel = []
         for i in range(len(orides)):
             if len(freev) > 0:
                 freev.sort(key = lambda v: man_distance(v[1], orides[i][0]))
-                endtime = man_distance(freev[0][1], orides[i][0]) +
+                endtime = man_distance(freev[0][1], orides[i][0]) + ride_distance(orides[i]) + step
+                if endtime <= orides[i][3]:
+                    v = freev[0]
+                    v[2] = orides[i]
+                    v[3] = endtime
+                    workv.append(v)
+                    del freev[0]
+                ridestodel.append(i)
+        for i in ridestodel:
+            del orides[i]
+        step++
 
+    return [v for v in donejob.values()]
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
