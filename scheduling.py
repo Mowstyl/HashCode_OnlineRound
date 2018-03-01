@@ -22,14 +22,14 @@ def ride_distance(ride):
     usable
 '''
 
-def sort_rides(rides, **kwargs): # kwargs['mode']: 0 -> ordenar por start, 1 -> ordenar por ride_distance 2 -> finish
+def sort_rides(rides, step, **kwargs): # kwargs['mode']: 0 -> ordenar por start, 1 -> ordenar por ride_distance 2 -> finish
     rev = False
     if(kwargs['mode']==0):
         k = lambda ride: ride[2]
     elif (kwargs['mode']==1):
         k = lambda ride: ride[3]
     elif (kwargs['mode']==2):
-        k = ride_distance
+        k = lambda ride: man_distance(ride[0],ride[1]) - ride[2]
         rev = True
     elif (kwargs['mode']==3):
         k = lambda ride: (ride[3] - ride[2]) + ride[2]
@@ -52,11 +52,14 @@ def main(argv): # We expect to receive input file as first argument and output f
     bestsol = None
     for i in range(4):
         sol, score = schedule(map_info, rides, i)
+        for ride in rides:
+            ride[5] = True
+        #print (score)
         if score > bestscore:
             bestsol = sol
             bestscore = score
     print (bestscore)
-    fh.saveRFile(output, sol)
+    fh.saveRFile(output, bestsol)
 
 '''
 map:
@@ -70,13 +73,14 @@ map:
 def schedule(map_info, rides, mode):
     score = 0
     step = 1
-    orides = sort_rides(rides, mode=mode)
+    orides = sort_rides(rides, step, mode=mode)
     freev = [[i, (0, 0), None, None] for i in range(map_info[2])] # Lista de vehiculos con su id, posicion y su ride asignado, asi como el tiempo en el que volvera a ser libre (willy)
     donejob = [[] for i in range(map_info[2])] # Diccionario que indiza por id de vehiculo y que almacena listas de trabajos completados
-    maxstep = max([ride[3] for ride in orides])
+    maxstep = max([ride[3] for ride in rides])
     #print (maxstep)
 
     while step <= maxstep and any([ride[5] for ride in orides]):
+        #orides = sort_rides(rides, step, mode=mode)
         #print ("Step: " + str(step))
         #print ("Working v: " + str(len(workv)) + " with rides " + str([v[2][4] for v in workv]))
         for i in range(len(freev)):
