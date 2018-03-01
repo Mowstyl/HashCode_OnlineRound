@@ -24,13 +24,15 @@ def ride_distance(ride):
 
 def sort_rides(rides, **kwargs): # kwargs['mode']: 0 -> ordenar por start, 1 -> ordenar por ride_distance 2 -> finish
     rev = False
-    if(kwargs['mode']=='0'):
+    if(kwargs['mode']==0):
         k = lambda ride: ride[2]
-    elif (kwargs['mode']=='1'):
+    elif (kwargs['mode']==1):
+        k = lambda ride: ride[3]
+    elif (kwargs['mode']==2):
         k = ride_distance
         rev = True
-    else:
-        k = lambda ride: ride[3]
+    elif (kwargs['mode']==3):
+        k = lambda ride: (ride[3] - ride[2]) + ride[2]
 
     return sorted(rides, key = k, reverse = rev)
 
@@ -46,8 +48,14 @@ def main(argv): # We expect to receive input file as first argument and output f
         print (str(e))
         print ("Program ended with errors!")
         return
-    sol, score = schedule(map_info, rides)
-    print (score)
+    bestscore = 0
+    bestsol = None
+    for i in range(4):
+        sol, score = schedule(map_info, rides, i)
+        if score > bestscore:
+            bestsol = sol
+            bestscore = score
+    print (bestscore)
     fh.saveRFile(output, sol)
 
 '''
@@ -59,10 +67,10 @@ map:
     bonus,     4
     steps      5
 '''
-def schedule(map_info, rides):
+def schedule(map_info, rides, mode):
     score = 0
     step = 1
-    orides = sort_rides(rides, mode=1)
+    orides = sort_rides(rides, mode=mode)
     freev = [[i, (0, 0), None, None] for i in range(map_info[2])] # Lista de vehiculos con su id, posicion y su ride asignado, asi como el tiempo en el que volvera a ser libre (willy)
     donejob = [[] for i in range(map_info[2])] # Diccionario que indiza por id de vehiculo y que almacena listas de trabajos completados
     maxstep = max([ride[3] for ride in orides])
